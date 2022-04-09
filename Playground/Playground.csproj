@@ -217,6 +217,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
   <ItemGroup>
     <Compile Include="Features\Archiving\DefaultArchiveFunction.cs" />
+    <Compile Include="Features\Events\UpdateModifiedDateEvents.cs" />
     <Compile Include="Features\Media\IMediaFactory.cs" />
     <Compile Include="Features\Media\MediaFactory.cs" />
     <Compile Include="Global.asax.cs">
