@@ -11,7 +11,7 @@ using EPiServer.PlugIn;
 using EPiServer.Scheduler;
 using EPiServer.Security;
 
-namespace Playground.Business.Jobs
+namespace Playground.Features.Archiving
 {
     [ScheduledPlugIn(DisplayName = "Default Archive Function",
         Description = "Used as a replacement to the original Archive Function.\n" +
