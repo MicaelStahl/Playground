@@ -25,6 +25,12 @@ namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Controllers
         private const string BusinessPath = "~/Business/Plugins/GetPagesOfTypePlugin/Views/GetPagesOfTypePlugin.cshtml";
         private const string FeaturePath = "~/Features/Plugins/GetPagesOfTypePlugin/Views/GetPagesOfTypePlugin.cshtml";
 
+        private static readonly string[] _ignoredPageTypes = new[]
+        {
+            "SysRoot",
+            "SysRecycleBin"
+        };
+
         private readonly IContentTypeRepository _contentTypeRepository;
         private readonly IContentModelUsage _contentModelUsage;
         private readonly IContentLoader _contentLoader;
@@ -228,7 +234,7 @@ namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Controllers
 
             foreach (var contentType in contentTypes)
             {
-                if (contentType.Name.Equals("SysRoot") || contentType.Name.Equals("SysRecycleBin"))
+                if (_ignoredPageTypes.Contains(contentType.Name))
                 {
                     continue;
                 }
