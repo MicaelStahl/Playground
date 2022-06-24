@@ -7,7 +7,7 @@ using EPiServer.Framework;
 using EPiServer.Framework.Initialization;
 using EPiServer.Security;
 
-namespace Playground.Business.Events
+namespace Playground.Features.Events
 {
     // This event handler updates the PageData.Changed value when a block/media it references is updated.
     [InitializableModule]

@@ -1,7 +1,7 @@
 ﻿using System.Web;
 using EPiServer.Core;
 
-namespace Alloy.Business.Media
+namespace Playground.Features.Media
 {
     public interface IMediaFactory
     {

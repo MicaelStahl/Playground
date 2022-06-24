@@ -8,7 +8,7 @@ using EPiServer.Security;
 using EPiServer.ServiceLocation;
 using EPiServer.Web;
 
-namespace Alloy.Business.Media
+namespace Playground.Features.Media
 {
     [ServiceConfiguration(FactoryType = typeof(IMediaFactory), Lifecycle = ServiceInstanceScope.Singleton)]
     internal sealed class MediaFactory : IMediaFactory
