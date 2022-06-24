@@ -1,5 +1,8 @@
-﻿namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Models
+﻿using System.Diagnostics;
+
+namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Models
 {
+    [DebuggerDisplay("ID = {ID}, Name = {Name}, Display name = {DisplayName ?? \"\"}, Available = {Available}, Checked = {Checked}")]
     public class PageType
     {
         public int ID { get; set; }

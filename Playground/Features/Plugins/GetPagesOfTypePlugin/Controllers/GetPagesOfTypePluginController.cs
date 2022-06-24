@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web.Mvc;
 using EPiServer;
 using EPiServer.Core;
 using EPiServer.DataAbstraction;
 using EPiServer.PlugIn;
+using EPiServer.Web;
 using EPiServer.Web.Routing;
 using Playground.Features.Plugins.GetPagesOfTypePlugin.Models;
 using Playground.Features.Plugins.GetPagesOfTypePlugin.ViewModels;
@@ -26,17 +29,26 @@ namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Controllers
         private readonly IContentModelUsage _contentModelUsage;
         private readonly IContentLoader _contentLoader;
         private readonly EditUrlResolver _editUrlResolver;
+        private readonly ISiteDefinitionRepository _siteDefinitionRepository;
+        private readonly ISiteDefinitionResolver _siteDefinitionResolver;
+        private readonly ILanguageBranchRepository _languageBranchRepository;
 
         public GetPagesOfTypePluginController(
             IContentTypeRepository contentTypeRepository,
             IContentModelUsage contentModelUsage,
             IContentLoader contentLoader,
-            EditUrlResolver editUrlResolver)
+            EditUrlResolver editUrlResolver,
+            ISiteDefinitionRepository siteDefinitionRepository,
+            ISiteDefinitionResolver siteDefinitionResolver,
+            ILanguageBranchRepository languageBranchRepository)
         {
             _contentTypeRepository = contentTypeRepository;
             _contentModelUsage = contentModelUsage;
             _contentLoader = contentLoader;
             _editUrlResolver = editUrlResolver;
+            _siteDefinitionRepository = siteDefinitionRepository;
+            _siteDefinitionResolver = siteDefinitionResolver;
+            _languageBranchRepository = languageBranchRepository;
         }
 
         [HttpGet]
@@ -44,26 +56,69 @@ namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Controllers
         {
             var model = new GetPagesOfTypeViewModel
             {
-                PageTypes = GetPageTypes()
+                PageTypes = GetPageTypes(),
+                Sites = GetSites(),
+                Languages = GetLanguages()
             };
 
             return View(GetView(), model);
         }
 
         [HttpPost]
-        public ActionResult Index(int? pageID)
+        public ActionResult Index(int? pageID, string lang = "", Guid? siteID = null)
         {
             var model = new GetPagesOfTypeViewModel
             {
                 PageTypes = GetPageTypes(pageID),
+                Sites = GetSites(siteID),
+                Languages = GetLanguages(lang),
+                LangId = lang,
+                SiteId = siteID
             };
 
             if (pageID.HasValue)
             {
-                model.Pages = GetPages(pageID.Value, model);
+                var language = new CultureInfo(lang);
+                model.Pages = GetPages(pageID.Value, siteID, language, model);
             }
 
             return View(GetView(), model);
+        }
+
+        private IReadOnlyList<Language> GetLanguages(string lang = "")
+        {
+            var languageBranches = _languageBranchRepository.ListEnabled();
+            var languages = new List<Language>();
+
+            foreach (var branch in languageBranches)
+            {
+                languages.Add(new Language
+                {
+                    LanguageID = branch.LanguageID,
+                    Name = branch.Name,
+                    Active = branch.LanguageID == lang
+                });
+            }
+
+            return languages;
+        }
+
+        private IReadOnlyList<Site> GetSites(Guid? siteId = null)
+        {
+            var definitions = _siteDefinitionRepository.List();
+            var sites = new List<Site>();
+
+            foreach (var definition in definitions)
+            {
+                sites.Add(new Site
+                {
+                    ID = definition.Id,
+                    Name = definition.Name,
+                    Active = definition.Id == siteId
+                });
+            }
+
+            return sites;
         }
 
         private IView GetView()
@@ -79,33 +134,88 @@ namespace Playground.Features.Plugins.GetPagesOfTypePlugin.Controllers
             return view;
         }
 
-        private IReadOnlyList<Page> GetPages(int pageId, GetPagesOfTypeViewModel model)
+        private IReadOnlyList<Page> GetPages(int pageId, Guid? siteId, CultureInfo language,
+            GetPagesOfTypeViewModel model)
         {
             var pages = new List<Page>();
             var pageType = _contentTypeRepository.Load(pageId);
             model.PageType = pageType.Name;
             var modelUsage = _contentModelUsage.ListContentOfContentType(pageType);
 
-            var uniques = modelUsage.Select(x => new
-                {
-                    ContentLink = x.ContentLink.ToReferenceWithoutVersion(), x.LanguageBranch
-                })
+            var uniques = modelUsage.Select(x => x.ContentLink.ToReferenceWithoutVersion())
+                .Select(x => _contentLoader.Get<PageData>(x))
                 .Distinct()
-                .Select(x => _contentLoader.Get<PageData>(x.ContentLink))
                 .ToList();
+
+            var pagesWithLanguages = new List<PageData>();
 
             foreach (var unique in uniques)
             {
+                foreach (var existingLang in unique.ExistingLanguages)
+                {
+                    pagesWithLanguages.Add(_contentLoader.Get<PageData>(unique.ContentLink, existingLang));
+                }
+            }
+
+            /* Invariant is the default culture used when "new CultureInfo(string.Empty);" is created*/
+            if (!Equals(language, CultureInfo.InvariantCulture))
+            {
+                pagesWithLanguages = FilterPages(pagesWithLanguages, language);
+            }
+
+            if (siteId?.Equals(Guid.Empty) == false)
+            {
+                pagesWithLanguages = FilterPages(pagesWithLanguages, siteId);
+            }
+
+            foreach (var pageData in pagesWithLanguages)
+            {
                 pages.Add(new Page
                 {
-                    ID = unique.ContentLink.ID,
-                    Name = unique.Name,
-                    Language = unique.Language,
-                    Url = _editUrlResolver.GetEditViewUrl(unique.ContentLink, new EditUrlArguments()
+                    ID = pageData.ContentLink.ID,
+                    Name = pageData.Name,
+                    Language = pageData.Language,
+                    Url = _editUrlResolver.GetEditViewUrl(pageData.ContentLink, new EditUrlArguments()
                     {
-                        Language = unique.Language
+                        Language = pageData.Language
                     })
                 });
+            }
+
+            return pages;
+        }
+
+        private List<PageData> FilterPages(List<PageData> uniques, CultureInfo language)
+        {
+            var pages = new List<PageData>();
+
+            for (var i = 0; i < uniques.Count; i++)
+            {
+                var unique = uniques[i];
+
+                if (unique.ExistingLanguages.Any(x => x.Equals(language)))
+                {
+                    pages.Add(unique);
+                }
+            }
+
+            return pages;
+        }
+
+        private List<PageData> FilterPages(List<PageData> uniques, Guid? siteId)
+        {
+            var pages = new List<PageData>();
+
+            for (var i = 0; i < uniques.Count; i++)
+            {
+                var unique = uniques[i];
+
+                var definition = _siteDefinitionResolver.GetByContent(unique.ContentLink, false);
+
+                if (definition != null && siteId.Equals(definition.Id))
+                {
+                    pages.Add(unique);
+                }
             }
 
             return pages;
