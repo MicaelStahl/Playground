@@ -222,8 +222,10 @@
     <Compile Include="Features\Media\MediaFactory.cs" />
     <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Controllers\GetPagesOfTypePluginController.cs" />
     <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Initialization\PluginRouteInitialization.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\Language.cs" />
     <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\Page.cs" />
     <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\PageType.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\Site.cs" />
     <Compile Include="Features\Plugins\GetPagesOfTypePlugin\ViewModels\GetPagesOfTypeViewModel.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
