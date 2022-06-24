@@ -220,12 +220,18 @@
     <Compile Include="Features\Events\UpdateModifiedDateEvents.cs" />
     <Compile Include="Features\Media\IMediaFactory.cs" />
     <Compile Include="Features\Media\MediaFactory.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Controllers\GetPagesOfTypePluginController.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Initialization\PluginRouteInitialization.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\Page.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\Models\PageType.cs" />
+    <Compile Include="Features\Plugins\GetPagesOfTypePlugin\ViewModels\GetPagesOfTypeViewModel.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Features\Plugins\GetPagesOfTypePlugin\Views\GetPagesOfTypePlugin.cshtml" />
     <Content Include="Global.asax" />
     <Content Include="Web.config" />
     <None Include="EPiServerLog.config" />
@@ -235,6 +241,7 @@
     <Content Include="modules\_protected\CMS\CMS.zip" />
     <Content Include="modules\_protected\EPiServer.Cms.TinyMce\web.config" />
     <Content Include="modules\_protected\EPiServer.Cms.TinyMce\EPiServer.Cms.TinyMce.zip" />
+    <None Include="Features\Plugins\GetPagesOfTypePlugin\Views\Web.config" />
     <None Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
